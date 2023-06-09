@@ -1,5 +1,4 @@
 from pymodbus.client.sync import ModbusSerialClient
-import keyboard
 
 # Create a Modbus serial client
 client = ModbusSerialClient(
@@ -15,29 +14,20 @@ client = ModbusSerialClient(
 if client.connect():
     print("Modbus serial connection opened successfully.")
 
-    # Read analog input value within 4-20mA range in a loop
-    while True:
-        if keyboard.is_pressed('q'):  # Check if 'q' key is pressed
-            print("Loop interrupted by user.")
-            break
-        
-        register_address = 30053
-        register_min = 0  # Replace with the minimum value of the register range
-        register_max = 65535  # Replace with the maximum value of the register range
-        analog_min = 4.0  # Replace with the minimum value of the analog range (4mA)
-        analog_max = 20.0  # Replace with the maximum value of the analog range (20mA)
+    # Read analog input value within 4-20mA range
+    register_address = 30053
+    register_min = 0  # Replace with the minimum value of the register range
+    register_max = 65535  # Replace with the maximum value of the register range
+    analog_min = 4.0  # Replace with the minimum value of the analog range (4mA)
+    analog_max = 20.0  # Replace with the maximum value of the analog range (20mA)
 
-        response = client.read_input_registers(register_address, count=1, unit=1)
-        if response.isError():
-            print(f"Failed to read register {register_address}. Error: {response}")
-        else:
-            register_value = response.registers[0]
-            analog_value = ((register_value - register_min) / (register_max - register_min)) * (analog_max - analog_min) + analog_min
-            print(f"Analog Value: {analog_value} mA")
-
-        # Wait for a certain duration before the next reading (optional)
-        import time
-        time.sleep(1)  # Adjust the sleep duration as needed
+    response = client.read_input_registers(register_address, count=1, unit=1)
+    if response.isError():
+        print(f"Failed to read register {register_address}. Error: {response}")
+    else:
+        register_value = response.registers[0]
+        analog_value = ((register_value - register_min) / (register_max - register_min)) * (analog_max - analog_min) + analog_min
+        print(f"Analog Value: {analog_value} mA")
 
     # Close the Modbus serial connection
     client.close()
