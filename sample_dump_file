@@ -1,0 +1,107 @@
+# Copyright (c) Vertical Future 2021
+#
+# This document is confidential and the copyright is either owned by or
+# licenced to Vertical Future. This document must not be loaned, copied,
+# or used for any purpose without the prior written permission of the
+# copyright holder, application for which should be made to:-
+# Head of Engineering, Vertical Future
+
+import logging
+import random
+import arrow
+import time
+import argparse
+import sys
+
+from enum import Enum
+from typing import List
+
+from ob_util_registers import *
+from pymodbus.client.sync import ModbusSerialClient
+from pymodbus.payload import BinaryPayloadDecoder
+from pymodbus.constants import Endian
+
+parser = argparse.ArgumentParser()
+parser.add_argument("port", help='COM? for Windows, /dev/cu.??USB??  /dev/cu.usb?? for Mac, /dev/serial/by-id/usb?? for ubuntu')
+parser.add_argument("--id")
+parser.add_argument("--set-id")
+args = parser.parse_args()
+if args.id == None:
+	print("--id must be specified")
+	sys.exit(1)
+
+# Uncomment for pymodbus verbose debug:
+#
+# logging.basicConfig()
+# log = logging.getLogger()
+# log.setLevel(logging.DEBUG)
+
+serial_port = args.port
+
+def tuple_to_float(registers):
+	decoder = BinaryPayloadDecoder.fromRegisters(registers, Endian.Big, wordorder=Endian.Big)
+	f = float(decoder.decode_32bit_float())
+
+	# Some CTs are wired wrong-way round so assume anything that's negative should be positive
+	# f = abs(f)
+
+	return f
+
+def check_type_code(client, slave_id):
+	# Check type code
+	res = client.read_input_registers(address=ob_config_registers['type-code'], count=1, unit=slave_id)
+	if res.isError():
+		print("*** No reply!")
+		return None
+
+	type = res.registers[0]
+	if not type in ob_registers:
+		print("*** Unknown type", type)
+		return None
+
+	return type
+
+def get_data(client, slave_id, type):
+	data = {}
+	for k, r in ob_registers[type].items():
+		# Must sleep between requests for the OB418 or else it might miss them
+		time.sleep(ob_sleep_time[type])
+
+		res = client.read_input_registers(address=r, count=2, unit=slave_id)
+		if not res.isError():
+			data[k] = tuple_to_float(res.registers)
+		else:
+			print("*** Failed to read: {type}")
+	print(data)
+
+def set_slave_id(client, slave_id, new_slave_id):
+	if new_slave_id < 0 or new_slave_id > 255:
+		print("*** Invalid slave ID!")
+		return False
+
+	# Note: must use write_registers as write_register is not supported by the OB115
+	res = client.write_registers(address=ob_config_registers['modbus-id'], values=[new_slave_id], unit=slave_id)
+	if res.isError():
+		print("*** Failed, not in SET mode?")
+		print(res)
+		return False
+
+	return True
+
+client = ModbusSerialClient(method='rtu', port=serial_port, baudrate=9600, timeout=0.5, parity='N', stopbits=1, bytesize=8, retry_on_empty=True, retries=3)
+if client.connect():
+	slave_id = int(args.id)
+	print(f"*** Connecting to ID: {slave_id}")
+
+	type = check_type_code(client, slave_id)
+	if type:
+		get_data(client, slave_id, type)
+		if args.set_id:
+			new_slave_id = int(args.set_id)
+			print(f"*** Changing ID from {slave_id} to {new_slave_id}")
+			if set_slave_id(client, slave_id, new_slave_id):
+				print("*** Change OK!")
+				print(f"*** Connecting to ID: {new_slave_id}")
+				get_data(client, new_slave_id, type)
+else:
+	print("*** Connect failed, check port?")
