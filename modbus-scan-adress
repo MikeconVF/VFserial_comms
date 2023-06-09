@@ -12,7 +12,23 @@ client = ModbusSerialClient(
 
 # Open the Modbus serial connection
 if client.connect():
-    print("Modbus serial communication is successful.")
+    print("Modbus serial connection opened successfully.")
+
+    # Define the range of Modbus addresses to check
+    start_address = 30050
+    end_address = 30070
+
+    # Iterate through the range of Modbus addresses and check for valid read values
+    for address in range(start_address, end_address + 1):
+        response = client.read_input_registers(address, count=1, unit=1)
+        print(address)
+        if not response.isError():
+            register_value = response.registers[0]
+            print(f"Address {address} has a valid read value: {register_value}")
+    
+    # Close the Modbus serial connection
     client.close()
+    print("Modbus serial connection closed.")
 else:
-    print("Failed to establish Modbus serial communication.")
+    print("Failed to open the Modbus serial connection.")
+
