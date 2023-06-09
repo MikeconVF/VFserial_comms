@@ -1,0 +1,18 @@
+from pymodbus.client.sync import ModbusSerialClient
+
+# Create a Modbus serial client
+client = ModbusSerialClient(
+    method='rtu',
+    port='/dev/cu.usbserial-1420',  # Replace with your serial port
+    baudrate=115200,  # Set the baud rate of your serial communication
+    parity='N',  # Set the parity as required
+    stopbits=1,  # Set the stop bits as required
+    bytesize=8  # Set the data bits as required
+)
+
+# Open the Modbus serial connection
+if client.connect():
+    print("Modbus serial communication is successful.")
+    client.close()
+else:
+    print("Failed to establish Modbus serial communication.")
