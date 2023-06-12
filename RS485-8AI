@@ -13,15 +13,15 @@ client = ModbusSerialClient(
 # Open the Modbus serial connection
 if client.connect():
     # Specify the Modbus slave address
-    slave_address = 1  # Replace with your Modbus device's slave address
+    MOD_8AI = 1  # Replace with your Modbus device's slave address
 
-    # Read holding register 40003
+    # Read holding register 40003S
     start_register = 52
     num_registers = 8
 
     for register_number in range(num_registers):
         # Read the holding register
-        response = client.read_input_registers(start_register + register_number, 1, unit=slave_address)
+        response = client.read_input_registers(start_register + register_number, 1, unit=MOD_8AI)
         if response.isError():
             print("Modbus error:", response)
             break

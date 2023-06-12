@@ -1,0 +1,102 @@
+from pymodbus.client.sync import ModbusSerialClient
+import time
+
+# Create a Modbus serial client
+client = ModbusSerialClient(
+    method='rtu',
+    port='/dev/cu.usbserial-1420',  # Replace with your serial port
+    baudrate=115200,  # Set the baud rate of your serial communication
+    parity='N',  # Set the parity as required
+    stopbits=1,  # Set the stop bits as required
+    bytesize=8  # Set the data bits as required
+)
+
+# Open the Modbus serial connection
+if client.connect():
+    # Specify the Modbus address
+    MOD_16I = 0  # Replace with your Modbus device's address
+
+    # Read holding register 40003S
+    start_register = 800  # Update the start register value
+    num_registers = 16
+
+    # List to store register values
+    register_values = []
+
+    # Variables for latch functionality
+    start_button_latched = False
+    PB_reset = False
+
+    while True:
+        for register_number in range(num_registers):
+            # Read the discrete input
+            response = client.read_discrete_inputs(start_register + register_number, 1, unit=MOD_16I)
+            if response.isError():
+                print("Modbus error:", response)
+                break
+
+            # Access the retrieved data
+            register_value = response.bits[0]
+            print("10",start_register + register_number, " register value =", register_value)
+
+            # Assign the value of input register 1 to the variable "start" and latch it
+            if register_number == 0:
+                start_button = register_value
+                if start_button and not start_button_latched:
+                    start_button_latched = True
+                    reset_button_latched = False
+                    Loop1_button_latched = False
+
+            #stop button
+            if register_number == 1:
+                Stop_button = register_value
+                if Stop_button:
+                    start_button_latched = False
+            
+            # Assign the value of input register 3 to the variable "PB_reset" and reset start_button_latched
+            if register_number == 2:
+                PB_reset= register_value
+                if PB_reset:
+                    reset_button_latched = True
+
+            #bleed button must be pressed and hold to function
+            if register_number == 3:
+                Bleed_button = register_value
+                while Bleed_button:
+                    print ("bleeding system")
+                    response = client.read_discrete_inputs(start_register + register_number, 1, unit=MOD_16I)
+                    print("10",start_register + register_number, " bleed value=", response.bits[0])
+                    time.sleep(0.5)
+                    if response.bits[0] == False:
+                        Bleed_button = False
+            
+            #stop loop 1 button 
+            if register_number == 4:
+                Loop1_button = register_value
+                if Loop1_button and not Loop1_button_latched:
+                    Loop1_button_latched = True
+
+            # Append the register value to the list
+            register_values.append(register_value)
+            print (start_button_latched)
+            if register_number < num_registers:
+                register_number += 1
+            elif register_number == num_registers:
+                register_number = 0
+
+            if start_button_latched == True:
+                print ("system active")
+                
+            # Add a delay between reads (adjust as needed)
+            time.sleep(0.5)
+
+        # Check break condition
+        if PB_reset:  # Replace this condition with your desired break condition
+            break
+
+    client.close()
+    print("Modbus serial connection closed.")
+
+    # Print the collected register values
+    print("All register values:", register_values)
+    print("Push button (latched):", start_button_latched)
