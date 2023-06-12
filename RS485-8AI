@@ -1,4 +1,5 @@
 from pymodbus.client.sync import ModbusSerialClient
+import time 
 
 # Create a Modbus serial client
 client = ModbusSerialClient(
@@ -10,6 +11,9 @@ client = ModbusSerialClient(
     bytesize=8  # Set the data bits as required
 )
 
+# slow down script excution
+time_n=0.5
+
 # Open the Modbus serial connection
 if client.connect():
     # Specify the Modbus slave address
@@ -19,16 +23,37 @@ if client.connect():
     start_register = 52
     num_registers = 8
 
-    for register_number in range(num_registers):
-        # Read the holding register
-        response = client.read_input_registers(start_register + register_number, 1, unit=MOD_8AI)
-        if response.isError():
-            print("Modbus error:", response)
-            break
+    def update_register_number(register_number):
+        if register_number < num_registers:
+            return register_number + 1
+        elif register_number == num_registers:
+            return 0
 
-        # Access the retrieved data
-        register_value = response.registers[0]
-        print("Register value:", register_value, "μA")
+    while True:
+        for register_number in range(num_registers):
+            # Read the holding register
+            response = client.read_input_registers(start_register + register_number, 1, unit=MOD_8AI)
+            if response.isError():
+                print("Modbus error:", response)
+                break
+
+            register_value = response.registers[0]
+
+            #connect ECM meter to AO1
+            if register_number == 0:
+                #ECM meter date retrieved
+                ECM_data = register_value
+                print("Register value:", register_value, "μA")
+            
+            #connect flow meter to AO2
+            if register_number == 1:
+                #ECM meter date retrieved
+                ECM_data = register_value
+                print("Register value:", register_value, "μA")
+
+            register_number = update_register_number(register_number)
+
+            time.sleep(time_n)
 
     client.close()
     print("Modbus serial connection closed.")
