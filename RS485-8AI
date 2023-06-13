@@ -41,15 +41,20 @@ if client.connect():
 
             #connect ECM meter to AO1
             if register_number == 0:
-                #ECM meter date retrieved
+                #ECM meter data retrieved
                 ECM_data = register_value
                 print("Register value:", register_value, "μA")
             
             #connect flow meter to AO2
             if register_number == 1:
-                #ECM meter date retrieved
-                ECM_data = register_value
-                print("Register value:", register_value, "μA")
+                #Flow meter data retrieved
+                FlowM_data = register_value
+                print("Register value:", register_value, "ml/min")
+
+            if register_number == 2:
+                #Injector Pulse 1 data retrieved
+                FlowM_data = register_value
+                print("Register value:", register_value, "ml/min")
 
             register_number = update_register_number(register_number)
 

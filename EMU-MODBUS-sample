@@ -1,0 +1,58 @@
+from pymodbus.client.sync import ModbusSerialClient
+import time
+
+# Create a Modbus serial client
+client = ModbusSerialClient(
+    method='rtu',
+    port='/dev/cu.usbserial-1420',  # Replace with your serial port
+    baudrate=9600,  # Set the baud rate of your serial communication
+    parity='N',  # Set the parity as required
+    stopbits=1,  # Set the stop bits as required
+    bytesize=8  # Set the data bits as required
+)
+
+# Open the Modbus serial connection
+if client.connect():
+    # Specify the Modbus slave address
+    OB115 = 1  # Replace with your Modbus device's slave address
+
+    # Define the register addresses
+    ob115_registers = {
+        'voltage (V)': 0x0002,
+        'frequency (Hz)': 0x0004,
+        'current (A)': 0x0006,
+        'active-power-W': 0x0008,
+        'apparent-power-VA': 0x000A,
+        'reactive-power-VAr': 0x000C,
+        'power-factor': 0x000E,
+        'import-active-energy': 0x0160,
+        'import-reactive-energy': 0x0162,
+        'export-active-energy': 0x0166,
+        'export-reactive-energy': 0x0168,
+        'total-active-energy': 0x016A
+    }
+
+    register_data = {}  # Dictionary to store register values
+
+    while True:
+        for register_name, register_address in ob115_registers.items():
+            # Read the holding register
+            response = client.read_input_registers(register_address, 1, unit=OB115)
+
+            if response.isError():
+                print(f"Modbus error reading register {register_name}: {response}")
+            else:
+                register_value = response.registers[0]
+                register_data[register_name] = register_value  # Store register value
+
+        # Access the stored register values
+        print("Register values:")
+        for register_name, register_value in register_data.items():
+            print(f"{register_name}: {register_value}")
+
+        time.sleep(60)  # Sleep for 1 minute before the next reading
+
+    client.close()
+    print("Modbus serial connection closed.")
+else:
+    print("Unable to connect to the Modbus device.")
