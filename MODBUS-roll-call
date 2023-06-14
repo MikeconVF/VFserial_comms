@@ -1,0 +1,36 @@
+from pymodbus.client.sync import ModbusSerialClient
+import time
+import pandas as pd
+
+# Create a Modbus serial client
+client = ModbusSerialClient(
+    method='rtu',
+    port='/dev/cu.usbserial-0001',  # Replace with your serial port
+    baudrate=9600,  # Set the baud rate of your serial communication
+    parity='N',  # Set the parity as required
+    stopbits=1,  # Set the stop bits as required
+    bytesize=8  # Set the data bits as required
+)
+
+# Modbus ID devices
+modbus_devices = {
+    1: 'OB115',
+    40: 'EPBmeter1',
+    # Add more Modbus IDs and device names as needed
+}
+
+# Check the communication status of each Modbus device
+for modbus_id, device_name in modbus_devices.items():
+    # Open the Modbus serial connection for the specific Modbus ID
+    if client.connect():
+        client.unit_id = modbus_id
+        response = client.read_holding_registers(0, 1)
+        if not response.isError():
+            print(f"(ID: {modbus_id}) is online, {device_name} connected.")
+        else:
+            print(f"(ID: {modbus_id}) is not communicating.")
+        client.close()
+    else:
+        print(f"(ID: {modbus_id}) Unable to connect")
+    
+    time.sleep(0.5)  # Delay for 0.5 seconds before checking the next Modbus device

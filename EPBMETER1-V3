@@ -1,0 +1,62 @@
+from pymodbus.client.sync import ModbusSerialClient
+import time
+import struct
+
+# Create a Modbus serial client
+client = ModbusSerialClient(
+    method='rtu',
+    port='/dev/cu.usbserial-0001',  # Replace with your serial port
+    baudrate=9600,  # Set the baud rate of your serial communication
+    parity='N',  # Set the parity as required
+    stopbits=1,  # Set the stop bits as required
+    bytesize=8  # Set the data bits as required
+)
+
+# Register map for epbmeter1_v3
+epbmeter1_v3_registers = {
+    'average-voltage-ln': 6,
+    'average-voltage-ll': 14,
+    'average-current': 22,
+    'total-kw': 42,
+    'total-kva': 44,
+    'total-kvr': 46,
+    'average-pf': 54,
+    'frequency': 56,
+    'total-kwh(imp)': 84,
+    'total-kwh(exp)': 98
+}
+
+# Open the Modbus serial connection
+if client.connect():
+    # Specify the Modbus slave address
+    EPBM = 40  # Replace with your Modbus device's slave address
+
+    # Specify the starting register address for input registers
+    start_register = 6
+    num_registers = len(epbmeter1_v3_registers)
+
+    def update_register_number(register_number):
+        if register_number < num_registers - 1:
+            return register_number + 1
+        else:
+            return 0
+
+    while True:
+        for register_name, register_address in epbmeter1_v3_registers.items():
+            # Read the input register
+            response = client.read_input_registers(start_register + register_address, 2, unit=EPBM)
+            if response.isError():
+                print("Modbus error:", response)
+                break
+
+            register_values = response.registers
+            register_value = struct.unpack('>f', struct.pack('>HH', *register_values))[0]
+            print(register_name + ":", register_value)
+
+            time.sleep(0.5)
+
+        client.close()
+        print("Modbus serial connection closed.")
+        break
+else:
+    print("Unable to connect to the Modbus device")

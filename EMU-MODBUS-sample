@@ -4,7 +4,7 @@ import time
 # Create a Modbus serial client
 client = ModbusSerialClient(
     method='rtu',
-    port='/dev/cu.usbserial-1420',  # Replace with your serial port
+    port='/dev/cu.usbserial-0001',  # Replace with your serial port
     baudrate=9600,  # Set the baud rate of your serial communication
     parity='N',  # Set the parity as required
     stopbits=1,  # Set the stop bits as required
@@ -14,7 +14,7 @@ client = ModbusSerialClient(
 # Open the Modbus serial connection
 if client.connect():
     # Specify the Modbus slave address
-    OB115 = 1  # Replace with your Modbus device's slave address
+    OB115 = 37  # Replace with your Modbus device's slave address
 
     # Define the register addresses
     ob115_registers = {
