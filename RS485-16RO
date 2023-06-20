@@ -1,0 +1,129 @@
+from pymodbus.client.sync import ModbusSerialClient
+import time 
+
+# Create a Modbus serial client
+client = ModbusSerialClient(
+    method='rtu',
+    port='/dev/cu.usbserial-1420',  # Replace with your serial port
+    baudrate=115200,  # Set the baud rate of your serial communication
+    parity='N',  # Set the parity as required
+    stopbits=1,  # Set the stop bits as required
+    bytesize=8  # Set the data bits as required
+)
+
+# slow down script execution
+time_n = 0.5
+
+# reset register count
+def update_register_number(register_number):
+    if register_number < num_registers:
+        return register_number + 1
+    elif register_number == num_registers:
+        return 0
+
+# Connect to the Modbus device
+client.connect()
+
+# Read coils
+def read_coils(address, count, unit):
+    response = client.read_coils(address, count, unit=unit)
+    if response.isError():
+        print(f"Read error occurred for coils starting at {address}: {response}")
+    else:
+        print(f"Coils starting at {address} - {address + count - 1}: {response.bits[0]}")
+    register_value = response.bits[0]
+    return  register_value
+
+# Write coil
+def write_coil(address, value, unit):
+    response = client.write_coil(address, value, unit=unit)
+    if response.isError():
+        print(f"Write error occurred for coil {address}: {response}")
+    else:
+        print(f"Coil {address} set to {value}.")
+
+# Read discrete inputs
+def read_discrete_inputs(address, count, unit):
+    response = client.read_discrete_inputs(address, count, unit=unit)
+    if response.isError():
+        print(f"Read error occurred for discrete inputs starting at {address}: {response}")
+    else:
+        print(f"Discrete inputs starting at {address} - {address + count - 1}: {response.bits}")
+    register_value = response.registers[0]
+    return  register_value
+
+# Read input registers
+def read_input_registers(address, count, unit):
+    response = client.read_input_registers(address, count, unit=unit)
+    if response.isError():
+        print(f"Read error occurred for input registers starting at {address}: {response}")
+    else:
+        print(f"Input registers starting at {address} - {address + count - 1}: {response.registers[0]}")
+    register_value = response.registers[0]
+    return  register_value
+
+# Read holding registers
+def read_holding_registers(address, count, unit):
+    response = client.read_holding_registers(address, count, unit=unit)
+    if response.isError():
+        print(f"Read error occurred for holding registers starting at {address}: {response}")
+    else:
+        print(f"Holding registers starting at {address}: {response.registers[0]}")
+    register_value = response.registers
+    return  register_value
+
+# Write register
+def write_register(address, value, unit):
+    response = client.write_register(address, value, unit=unit)
+    if response.isError():
+        print(f"Write error occurred for register {address}: {response}")
+    else:
+        print(f"Register {address} set to {value}.")
+
+
+# Open the Modbus serial connection
+if client.connect():
+    # Specify the Modbus slave address
+    MOD_16RO = 4  # Replace with your Modbus device's slave address
+
+    # Read holding register 40003S
+    start_register = 0
+    num_registers = 2
+
+    #watchdog enable
+    write_register(8,4000,MOD_16RO)
+    for register_number in range(num_registers):
+        '''
+        #set start_register = 2
+        register_value = read_holding_registers(start_register + register_number, 1, MOD_16RO)
+        print("Register value:", register_value)
+        '''
+        '''
+        #read watchdog
+        register_value = read_holding_registers(9, 1, MOD_16RO)
+        print("Register value:", register_value)
+        '''
+
+        #read default state
+        if register_number == 0:
+            #register_value = write_coil(start_register + register_number, True, MOD_16RO)
+            #print(f"Coils default at {start_register} - {start_register+ 3}: {register_value}")
+
+            #triger digital output2. modbus address 818
+            write_coil(192,False,MOD_16RO)
+
+        #read digital out
+        if register_number == 1:
+            #write_coil(816, False, MOD_16RO)
+            print("---------------------")
+            write_coil(816,True,MOD_16RO)
+
+        #register_number = update_register_number(register_number)
+
+        time.sleep(time_n)
+        client.close()
+        print("Modbus serial connection closed.")
+        
+
+else:
+    print("Unable to connect to the Modbus device")

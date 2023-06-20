@@ -15,14 +15,15 @@ client = ModbusSerialClient(
 # Modbus ID devices
 modbus_devices = {
     1: 'OB115',
-    40: 'EPBmeter1',
+    2: 'OB115',
+    40: 'EPBmeter1'
     # Add more Modbus IDs and device names as needed
 }
-
-# Check the communication status of each Modbus device
-for modbus_id, device_name in modbus_devices.items():
     # Open the Modbus serial connection for the specific Modbus ID
-    if client.connect():
+if client.connect():
+# Check the communication status of each Modbus device
+    for modbus_id, device_name in modbus_devices.items():
+        # Open the Modbus serial connection for the specific Modbus ID
         client.unit_id = modbus_id
         response = client.read_holding_registers(0, 1)
         if not response.isError():
@@ -30,7 +31,7 @@ for modbus_id, device_name in modbus_devices.items():
         else:
             print(f"(ID: {modbus_id}) is not communicating.")
         client.close()
-    else:
-        print(f"(ID: {modbus_id}) Unable to connect")
-    
-    time.sleep(0.5)  # Delay for 0.5 seconds before checking the next Modbus device
+
+        time.sleep(0.5)  # Delay for 0.5 seconds before checking the next Modbus device
+else:
+    print("Unable to connect to the Modbus device")

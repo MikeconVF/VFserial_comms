@@ -1,0 +1,100 @@
+from pymodbus.client.sync import ModbusSerialClient
+import time 
+
+# Create a Modbus serial client
+client = ModbusSerialClient(
+    method='rtu',
+    port='/dev/cu.usbserial-1420',  # Replace with your serial port
+    baudrate=115200,  # Set the baud rate of your serial communication
+    parity='N',  # Set the parity as required
+    stopbits=1,  # Set the stop bits as required
+    bytesize=8  # Set the data bits as required
+)
+
+# slow down script excution
+time_n=0.5
+
+# scalling 4-20mA to 1000
+def scaling_mA_integer(current):
+    current_min = 4  # Minimum current value in mA
+    current_max = 20  # Maximum current value in mA
+    integer_min = 0  # Minimum integer value
+    integer_max = 1000  # Maximum integer value
+    
+    # Calculate the scaling factor
+    scaling_factor = (integer_max - integer_min) / (current_max - current_min)
+    
+    # Calculate the mapped integer value
+    mapped_integer = integer_min + (current - current_min) * scaling_factor
+    
+    # Round the mapped integer value and convert it to an integer
+    mapped_integer = int(round(mapped_integer))
+    
+    return mapped_integer
+
+# scalling 0-10V to 10240
+def scaling_mV_integer(voltage):
+    voltage_min = 0  # Minimum current value in mA
+    voltage_max = 10  # Maximum current value in mA
+    integer_min = 0  # Minimum integer value
+    integer_max = 10240  # Maximum integer value
+    
+    # Calculate the scaling factor
+    scaling_factor = (integer_max - integer_min) / (voltage_max - voltage_min)
+    
+    # Calculate the mapped integer value
+    mapped_integer = integer_min + (voltage - voltage_min) * scaling_factor
+    
+    # Round the mapped integer value and convert it to an integer
+    mapped_integer = int(round(mapped_integer))
+    
+    return mapped_integer
+
+#reset register count
+def update_register_number(register_number):
+    if register_number < num_registers:
+        return register_number + 1
+    elif register_number == num_registers:
+        return 0
+
+#write register
+def write_register(register_address, value, unit_id):
+    # Write a single value to a holding register
+    response = client.write_register(register_address, value, unit=unit_id)
+    if response.isError():
+        print(f"Write error occurred for register {register_address}: {response}")
+    else:
+        print(f"Value {value} written successfully to register {register_address}.")
+
+
+# Open the Modbus serial connection
+if client.connect():
+    # Specify the Modbus slave address
+    MOD_8AO = 3  # Replace with your Modbus device's slave address
+
+    # Read holding register 40003S
+    start_register = 52
+    num_registers = 8
+    current_value=14
+    voltage_value=5
+    for register_number in range(num_registers):
+        if register_number == 0:
+            #scaling 
+            mapped_integer_value = scaling_mA_integer(current_value)
+            #write registry
+            write_register(start_register + register_number, mapped_integer_value, MOD_8AO)
+
+        if register_number == 5:
+            #scaling 
+            mapped_integer_value = scaling_mV_integer(voltage_value)
+            #write registry
+            write_register(start_register + register_number, mapped_integer_value, MOD_8AO)
+
+        register_number = update_register_number(register_number)
+
+    
+    client.close()
+    print("Modbus serial connection closed.")
+
+else:
+    print("Unable to connect to the Modbus device")

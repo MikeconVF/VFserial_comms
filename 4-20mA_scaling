@@ -1,0 +1,30 @@
+def map_4_20ma_to_integer(current):
+    current_min = 4  # Minimum current value in mA
+    current_max = 20  # Maximum current value in mA
+    integer_min = 0  # Minimum integer value
+    integer_max = 1000  # Maximum integer value
+    
+    # Calculate the scaling factor
+    scaling_factor = (integer_max - integer_min) / (current_max - current_min)
+    
+    # Calculate the mapped integer value
+    mapped_integer = integer_min + (current - current_min) * scaling_factor
+    
+    # Round the mapped integer value and convert it to an integer
+    mapped_integer = int(round(mapped_integer))
+    
+    return mapped_integer
+
+current_value = 12.5  # Example current value in mA
+mapped_integer_value = map_4_20ma_to_integer(current_value)
+print(mapped_integer_value)  # Output: 468
+
+
+for register_number in range(num_registers):
+    #scaling 
+    mapped_integer_value = scaling_mA_integer(current_value)
+    #write registry
+    write_register(start_register + register_number, mapped_integer_value, MOD_8AO)
+
+    register_number = update_register_number(register_number)
+

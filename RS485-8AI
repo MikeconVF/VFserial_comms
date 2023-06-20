@@ -17,7 +17,7 @@ time_n=0.5
 # Open the Modbus serial connection
 if client.connect():
     # Specify the Modbus slave address
-    MOD_8AI = 1  # Replace with your Modbus device's slave address
+    MOD_8AI = 2  # Replace with your Modbus device's slave address
 
     # Read holding register 40003S
     start_register = 52

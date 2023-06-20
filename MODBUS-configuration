@@ -1,0 +1,27 @@
+"""
+Modbus cofiguration registers
+"""
+
+from pymodbus.client.sync import ModbusSerialClient
+
+
+
+def write_r(address, value, unit):
+    response = client.write_register(address, value, unit=unit)
+    if response.isError():
+        print(f"Write error occurred for register {address}: {response}")
+    else:
+        print(f"Register {address} set to {value}.")
+
+#set total amount of device
+ID_qty =  5
+Baud_rate = 5   #5 = 115200bps
+
+
+
+if client.connect():
+    #configuring Baud rate
+    for n in range(ID_qty):
+        #module 16I
+        if n == 1:
+            write_r(2,5,n)

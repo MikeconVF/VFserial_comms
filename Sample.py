@@ -1,24 +1,16 @@
-from pymodbus.client.sync import ModbusSerialClient
+from modbus_var import modbus_variables
 
-# Create a Modbus serial client
-client = ModbusSerialClient(
-    method='rtu', 
-    port='COM8',  # Replace with the appropriate serial port for your adapter
-    baudrate= 115200,  # Set the baud rate of your serial communication
-    parity='N',  # Set the parity as required
-    stopbits=1,  # Set the stop bits as required
-    bytesize=8  # Set the data bits as required
-)
+modbus_vars = modbus_variables()
 
-# Open the Modbus serial connection
-if client.connect():
-    print("Modbus serial connection opened successfully.")
+start_register = modbus_vars.MOD_8AO['start_register']
+num_registers = modbus_vars.MOD_8AO['num_registers']
+current_value = modbus_vars.MOD_8AO['current_value']
+voltage_value = modbus_vars.MOD_8AO['voltage_value']
 
-    # Perform Modbus communication operations here
-    # For example, you can read holding registers using client.read_holding_registers() or write coils using client.write_coil()
+print(start_register)
+print(num_registers)
+print(current_value)
+print(voltage_value)
 
-    # Close the Modbus serial connection
-    client.close()
-    print("Modbus serial connection closed.")
-else:
-    print("Failed to open the Modbus serial connection.")
+
+        if r_value == 6:
