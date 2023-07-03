@@ -49,7 +49,7 @@ def read_discrete_inputs(address, count, unit):
         print(f"Read error occurred for discrete inputs starting at {address}: {response}")
     else:
         print(f"Discrete inputs starting at {address} - {address + count - 1}: {response.bits}")
-    register_value = response.registers[0]
+    register_value = response
     return  register_value
 
 # Read input registers
@@ -69,7 +69,7 @@ def read_holding_registers(address, count, unit):
         print(f"Read error occurred for holding registers starting at {address}: {response}")
     else:
         print(f"Holding registers starting at {address}: {response.registers[0]}")
-    register_value = response.registers
+    register_value = response
     return  register_value
 
 # Write register
@@ -127,3 +127,38 @@ if client.connect():
 
 else:
     print("Unable to connect to the Modbus device")
+
+from enum import Enum
+
+class RegisterAddresses(Enum):
+    OUTPUT_1 = 816,
+
+
+class RegisterTypes(Enum):
+    OUTPUT_1 = 816,
+
+REGISTER_ADDRESSES = {
+    "output_1": 816,
+}
+
+class IOModbusModule(object):
+
+    def __init__(self, slave_id: int, register_address: str, client: ModbusSerialClient):
+        self.slave_id = slave_id
+        self.client = client
+
+        self.client.connect()
+
+    def __cleanup(self):
+        self.client.close()
+
+    def read(register: RegisterAddresses):
+
+
+        pass
+
+client = 
+
+loop_module = IOModbusModule(1, 'dev/tty..',0)
+
+loop_module.read(RegisterAddresses.OUTPUT_1)

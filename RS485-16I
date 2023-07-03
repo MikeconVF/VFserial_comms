@@ -13,7 +13,7 @@ client = ModbusSerialClient(
 
 
 modbus_vars = modbus_variables()
-
+MOD_16I = modbus_vars.MOD_16I['address']
 start_register = modbus_vars.MOD_16I['start_register']
 num_registers = modbus_vars.MOD_16I['num_registers']
 num_registers = modbus_vars.MOD_16I['num_registers']

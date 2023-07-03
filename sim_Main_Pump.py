@@ -1,7 +1,6 @@
-# EC_signal_generator.py
-import time
+# sim_Main_Pump.py
 
-class sim_EC_signal:
+class MainPumpSim:
     def __init__(self, start_value, end_value, step):
         self.start_value = start_value
         self.end_value = end_value

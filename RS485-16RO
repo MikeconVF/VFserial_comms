@@ -21,9 +21,6 @@ def update_register_number(register_number):
     elif register_number == num_registers:
         return 0
 
-# Connect to the Modbus device
-client.connect()
-
 # Read coils
 def read_coils(address, count, unit):
     response = client.read_coils(address, count, unit=unit)

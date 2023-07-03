@@ -61,6 +61,7 @@ if client.connect():
     while Diana_value:
         #stop nutriend injector -> open NC relay for on/of funtionality 
         
+        
 
     client.close()
     print("Modbus serial connection closed.")
